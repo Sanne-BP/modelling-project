@@ -52,7 +52,29 @@ p_Function  <- function(t,current.env.value,host.count){(current.env.value-host.
           #transmission depends on environmental factors and host density
     
 ###Extra Parameters
+#You can introduce heterogeneity among hosts by making certain parameters individual-specific rather than global constants. This allows each host to have unique characteristics that affect their behavior in the epidemic model. 
+
+p_Function  <- function(t,pFunction.param1){plogis(t,pFunction.param1,2)}
+          #p_Function  <- function(t){plogis(t,10,2)} <- it was first this!
+          #the function is defined to depend on t and an additional parameter, pFunction.param1
+          #plogis(t,pFunction.param1,2) defines a logistic function, where pFunction.param1                  represents the mean µ of the distribution. SO, instead of setting µ=10 as a fixed value            for all hosts, we now make it vary between individuals
+
+    #To introduce variability among hosts, pFunction.param1 is sampled from a normal distribution      with mean = 10 and sd = 2
+    p_Function_param1 <- function(x){rnorm(x,mean=10,sd=2)} #sampling one parameter for each                                                                   infected individual
+          #this generates one random value per host, meaning each infected host gets a unique                 pFunction.param1 value. Notice that the function is expressed as a function of x instead           of t. x is present in the body of the function as the number of draws to make from the             distribution
+
+    p_Function_parameters  <- list(pFunction.param1 = p_Function_param1)
+          #every parameter function you specify should be gathered into a list, where the function           determining the parameter for each individual (here, p_Function_param1) has to be named            according to the name used in p_Function for this parameter (here, pFunction.param1) 
+          #The list acts as a structured "parameter manager", allowing nosoi to efficiently assign           individualized parameter values to each host without needing to manually specify them              every time.
 
 
-
-
+###Combining arguments
+    
+    
+    
+    
+    
+    
+    
+    
+    

@@ -69,12 +69,6 @@ p_Function  <- function(t,pFunction.param1){plogis(t,pFunction.param1,2)}
 
 
 ###Combining arguments
-    
-    
-    
-    
-    
-    
-    
-    
-    
+p_Function  <- function(t, prestime, current.in, pFunction.param1, pFunction.param2,...){}   
+
+  #We have previously shown that you can combine the time since infection t with other parameters    such as current.in or prestime. In fact, you can combine as many arguments as you want, making a   function dependent on the time since infection, current location, present time and individual      host-dependent parameters. They however need to respect a specific order to be correctly parsed    by the   simulator: first t, then prestime, then current.in (discrete) or current.env.value        (continuous) and finally individual host-dependent parameters.

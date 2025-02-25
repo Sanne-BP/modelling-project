@@ -1,9 +1,13 @@
 ######Getting started with Nosoi (https://slequime.github.io/nosoi/index.html)
 rm(list = ls())
 
-#Installation
-install.packages("nosoi")
-library(nosoi)
+#Installation from CRAN:
+#install.packages("nosoi")
+#library(nosoi)
+
+#Installing latest version from github (preferred):
+install.packages("devtools")
+devtools::install_github(repo = "slequime/nosoi")
 
 #######Setting up the core functions
 ###Functions' arguments
@@ -34,8 +38,7 @@ p_Function  <- function(t,current.env.value){current.env.value/100} #continuous
             #if environmental value is 50, probability is 50/100=0.5, could model temperature                  -dependent transmission, where a pathogen is more transmissible in hotter areas 
 
           #discrete = transmission probably depends on categorical location
-          #continuous = transmission probability depends on a numeric environmental variable
-          #(?? is that correct????)
+          #continuous = transmission probability depends on a numeric environmental variable, or             movement 
 
 #host.count (can be used to represent the number of hosts present at a given location (only for a structured population))
 p_Function  <- function(t,current.in, host.count){

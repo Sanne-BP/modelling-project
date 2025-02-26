@@ -74,4 +74,47 @@ param_pTrans = list(p_max=p_max_fct, t_incub=t_incub_fct)
 
 
 
+####RUNNING
+#Once nosoiSim is set up, you can run the simulation (here the “seed” ensures that you will obtain the same results as in this tutorial):
+library(nosoi)  
+
+#pExit
+p_Exit_fct  <- function(t){return(0.08)}
+
+#nContact
+n_contact_fct = function(t){abs(round(rnorm(1, 0.5, 1), 0))}
+
+#pTrans
+p_Trans_fct <- function(t,p_max,t_incub){
+  if(t < t_incub){p=0}
+  if(t >= t_incub){p=p_max}
+  return(p)
+}
+
+t_incub_fct <- function(x){rnorm(x,mean = 7,sd=1)}
+p_max_fct <- function(x){rbeta(x,shape1 = 5,shape2=2)}
+
+param_pTrans = list(p_max=p_max_fct,t_incub=t_incub_fct)
+
+# Starting the simulation ------------------------------------
+
+set.seed(805)
+SimulationSingle <- nosoiSim(type="single", popStructure="none",
+                             length.sim=100, max.infected=100, init.individuals=1, 
+                             nContact=n_contact_fct,
+                             param.nContact=NA,
+                             timeDep.nContact=FALSE,
+                             pExit = p_Exit_fct,
+                             param.pExit=NA,
+                             timeDep.pExit=FALSE,
+                             pTrans = p_Trans_fct,
+                             param.pTrans = param_pTrans,
+                             timeDep.pTrans=FALSE,
+                             prefix.host="H",
+                             print.progress=FALSE)
+
+#The simulation has run for 40 units of time and a total of 111 hosts have been infected.
+#Once the simulation has finished, it reports the number of time units for which the simulation has run (40), and the maximum number of infected hosts (111). Note that the simulation has stopped here before reaching length.sim as it has crossed the max.infected threshold set at 100.
+
+
 

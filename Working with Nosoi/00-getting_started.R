@@ -3,12 +3,13 @@ rm(list = ls())
 
 #Installation from CRAN:
 #install.packages("nosoi")
-#library(nosoi)
+
 
 #Installing latest version from github (preferred):
 install.packages("devtools")
 devtools::install_github(repo = "slequime/nosoi")
       #I did not update the packages yet, but by reinstalling nosoi this is probably possible again
+library(nosoi)
 
 #######Setting up the core functions
 ###Functions' arguments

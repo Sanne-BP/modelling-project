@@ -44,9 +44,34 @@ p_Trans_fct <- function(t, p_max, t_incub){
 }
 #We choose pTrans in the form of a threshold function: before a certain amount of time since initial infection, the host does not transmit (incubation time, which we call t_incub), and after that time it will transmit with a certain (constant) probability (which we call p_max). This function is dependent on the time since the host’s infection t:
 
-#Because each host is different (slightly different biotic and abiotic factors), you can expect each host to exhibit differences in the dynamics of infection, and hence the probability of transmission over time. Thus, t_incub and p_max will be sampled for each host individually according to a certain distribution. t_incub will be sampled from a normal distribution of mean=7 and sd= 1, while p_max will be sampled from a beta distribution with shape parameters 𝛼=5 and𝛽=2:
 t_incub_fct <- function(x){rnorm(x,mean = 7,sd=1)}
 p_max_fct <- function(x){rbeta(x,shape1 = 5,shape2=2)}
+#Because each host is different (slightly different biotic and abiotic factors), you can expect each host to exhibit differences in the dynamics of infection, and hence the probability of transmission over time. Thus, t_incub and p_max will be sampled for each host individually according to a certain distribution. t_incub will be sampled from a normal distribution of mean=7 and sd= 1, while p_max will be sampled from a beta distribution with shape parameters 𝛼=5 and𝛽=2
+
+    #Plotting distribution of max transmission probability (p_max):
+      #Generate 10,000 samples
+      p_max_samples <- rbeta(10000, shape1 = 5, shape2 = 2)
+
+      #Plot a histogram
+     hist(p_max_samples, 
+     breaks = 30, 
+     col = "lightgreen", 
+     main = "Distribution of Maximum Transmission Probability (p_max)", 
+     xlab = "p_max", 
+     ylab = "Frequency", 
+     border = "white")
+
+      #Add a vertical line for the mean
+      abline(v = mean(p_max_samples), col = "red", lwd = 2, lty = 2)
+
+      #Most p_max values will be greater than 0.5, meaning hosts have a relatively high chance of        transmitting the pathogen after the incubation period.
+
+#Note that here t_incub and p_max are functions of x and not t (they are not core functions but individual-based parameters), and x enters the function as the number of draws to make.
+
+#pTrans is not dependent on the “absolute” time of the simulation, so timeDep.pTrans=FALSE. However, since we make use of individual-based parameters, we have to provide a param.pTrans as a list of functions. The name of each element within this list should have the same name that the core function (here pTrans) uses as argument
+param_pTrans = list(p_max=p_max_fct, t_incub=t_incub_fct)
+
+
 
 
 

@@ -229,10 +229,152 @@ SimulationDual <- nosoiSim(type="dual", popStructure="none",
 #The simulation has run for 43 units of time and a total of 101 (A) and 92 (B) hosts have been infected.
 #Once the simulation has finished, it reports the number of time units for which the simulation has run (43), and the maximum number of infected hosts A (101) and hosts B (92). Note that the simulation has stopped here before reaching length.sim as it has crossed the max.infected.A threshold set at 100.
 
+#This mirrors real-world outbreaks, where a new pathogen might start in one species (Host A) before spilling over into another species (Host B). This setup lets us study cross-species transmission dynamics (e.g., how likely the disease is to jump from Host A to Host B).
+
+
+
+
+#---------------------------------Trying to Visualize---------------------------------------------
+
+library(ggplot2)
+install.packages("dplyr")
+library(dplyr)
+
+# Combine Host A and Host B infection times
+df_infected <- bind_rows(
+  data.frame(time = SimulationDual$host.info.A$table.hosts$inf.time, Host = "A"),
+  data.frame(time = SimulationDual$host.info.B$table.hosts$inf.time, Host = "B")
+)
+
+# Count new infections per time step
+df_incidence <- df_infected %>%
+  count(time, Host)
+
+# Plot
+ggplot(df_incidence, aes(x = time, y = n, color = Host)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Incidence Over Time", x = "Time", y = "New Infections") +
+  scale_color_manual(values = c("A" = "blue", "B" = "red")) +
+  theme_minimal()
+
+
+
+
 
 
 #-------------------------------------------altering the simulation-------------------------------
 
+######Single host
+library(nosoi)  
+
+#pExit
+p_Exit_fct  <- function(t){return(0.001)}
+
+#nContact
+n_contact_fct = function(t){abs(round(rnorm(1, 0.5, 1), 0))}
+
+#pTrans
+p_Trans_fct <- function(t,p_max,t_incub){
+  if(t < t_incub){p=0}
+  if(t >= t_incub){p=p_max}
+  return(p)
+}
+
+t_incub_fct <- function(x){rnorm(x,mean = 7,sd=1)}
+p_max_fct <- function(x){rbeta(x,shape1 = 5,shape2=2)}
+
+param_pTrans = list(p_max=p_max_fct,t_incub=t_incub_fct)
+
+# Starting the simulation ------------------------------------
+
+SimulationSingle <- nosoiSim(type="single", popStructure="none",
+                             length.sim=100, max.infected=100, init.individuals=1, 
+                             nContact=n_contact_fct,
+                             param.nContact=NA,
+                             timeDep.nContact=FALSE,
+                             pExit = p_Exit_fct,
+                             param.pExit=NA,
+                             timeDep.pExit=FALSE,
+                             pTrans = p_Trans_fct,
+                             param.pTrans = param_pTrans,
+                             timeDep.pTrans=FALSE,
+                             prefix.host="H",
+                             print.progress=FALSE)
+
+#The simulation has run for 9 units of time and a total of 1 hosts have been infected.
+SimulationSingle$host.info$table.hosts
+#Means that no hosts were infected or recorded during the simulation. This suggests that the infection died out immediately, likely due to that the initital host exited too quickly, there were no contact events or the transmission probability was too low.
+SimulationSingle$host.info$N.infected
+n_contact_fct(1)  # Run it multiple times to see what values it returns
+p_max_fct(1)  # Generate a sample p_max
+t_incub_fct(1)  # Generate a sample incubation time
+
+#The outcome of your simulation depends on the interplay between transmission probability (pTrans), contact rate (nContact), and exit probability (pExit), along with random variation in each of these parameters. This explains why in one run, you got 105 infections and in another, only 1 infection—small changes in individual factors (due to random sampling) can lead to vastly different epidemic dynamics.
+
+SimulationSingle <- nosoiSim(type="single", popStructure="none",
+                             length.sim=100, max.infected=100, init.individuals=1, 
+                             nContact=n_contact_fct,
+                             param.nContact=NA,
+                             timeDep.nContact=FALSE,
+                             pExit = p_Exit_fct,
+                             param.pExit=NA,
+                             timeDep.pExit=FALSE,
+                             pTrans = p_Trans_fct,
+                             param.pTrans = param_pTrans,
+                             timeDep.pTrans=FALSE,
+                             prefix.host="H",
+                             print.progress=FALSE)
 
 
+#####THIS DOES NOT WORK whoops
+#Try running multiple simulations and summarize these results
+# Function to run a single simulation
+run_simulation <- function() {
+  sim <- nosoiSim(
+    type="single", popStructure="none",
+    length.sim=100, max.infected=100, init.individuals=1,
+    nContact=n_contact_fct,
+    param.nContact=NA,
+    timeDep.nContact=FALSE,
+    pExit = p_Exit_fct,
+    param.pExit=NA,
+    timeDep.pExit=FALSE,
+    pTrans = p_Trans_fct,
+    param.pTrans = param_pTrans,
+    timeDep.pTrans=FALSE,
+    prefix.host="H",
+    print.progress=FALSE
+  )
+  
+  # Check if the simulation actually resulted in infections
+  if (is.null(sim$host.info$N.infected) || sim$host.info$N.infected == 1) {
+    return(data.frame(total_infected = NA, duration = NA))
+  }
+  
+  # Extract key results
+  total_infected <- sim$host.info$N.infected
+  duration <- sim$total.time
+  
+  return(data.frame(total_infected, duration))
+}
 
+# Run multiple simulations
+n_runs <- 100
+results <- do.call(rbind, replicate(n_runs, run_simulation(), simplify=FALSE))
+
+# Remove NA rows
+results <- na.omit(results)
+
+# Summary of results
+summary(results)
+
+# Visualize total infections
+ggplot(results, aes(x=total_infected)) +
+  geom_histogram(binwidth=5, fill="blue", alpha=0.7) +
+  labs(title="Distribution of Total Infected Hosts", x="Total Infected", y="Frequency")
+
+# Visualize duration of outbreaks
+ggplot(results, aes(x=duration)) +
+  geom_histogram(binwidth=5, fill="red", alpha=0.7) +
+  labs(title="Distribution of Epidemic Duration", x="Simulation Duration", y="Frequency")

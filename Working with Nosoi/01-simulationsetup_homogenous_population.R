@@ -118,3 +118,121 @@ SimulationSingle <- nosoiSim(type="single", popStructure="none",
 
 
 
+
+
+
+######Dual host
+#Setting up a dual host simulation is similar to the single host version described above, but each parameter has to be provided for both hosts. Here, we choose for Host A the same parameters as the single / only host above. Host B will have sightly different parameters:
+
+p_Exit_fctB  <- function(t,prestime){(sin(prestime/(2*pi*10))+1)/16} #for a periodic function
+#for pExit.B a value is chosen that depends on the "absolute" time of the simulation, for example cyclic climatec conditions (temperature). In that case, the function's argumens should be t and prestime (the "absolute" time of the simulation)
+
+#Since pExit.B is dependent on the simulation’s absolute time, do not forget to set timeDep.pExit.B to TRUE. Since there are no individual-based parameters, param.pExit.B=NA.
+
+n_contact_fct.B = function(t){sample(c(0,1,2),1,prob=c(0.6,0.3,0.1))}
+#For nContact.B, we choose a constant function that will sample a value out of a provided range of possible values, each with a certain probability. So, each value here has as specific probability. This means that most infected hosts will not make any new contacts, some will infect one person, and only a few will infect two people.
+
+#At each time and for each infected host, nContact.B will be drawn anew. Remember that nContact.B, like the other core functions has to be function of t, even if t is not used. Since nContact.B is constant here, there is no use for the “absolute” time of the simulation nor for the individual-based parameters. So param.nContact.B=NA, and timeDep.nContact.B=FALSE.
+
+p_Trans_fct.B <- function(t, max.time){
+  dnorm(t, mean=max.time, sd=2)*5
+}
+#We choose pTrans.B in the form of a Gaussian function. It will reach its maximum value at a certain time point (mean) after initial infection and will subsequently decrease until it reaches 0. dnorm() calculates the probability density of a normal distribution. mean=max.time is peak transmission time for this specific host. sd=2 determines how quickly the probability drops before and after max.time. *5 scales the probability so that the peak reaches a mmore reasonable value for transmission probability
+
+max.time_fct <- function(x){rnorm(x,mean = 5,sd=1)}
+#Because each host is different (slightly different biotic and abiotic factors), you can expect each host to exhibit differences in the dynamics of infection, and hence the probability of transmission over time. Thus, max.time will be sampled for each host individually according to a certain distribution. max.time will be sampled from a normal distribution of parameters mean=5 and sd = 1. So each host's peak tranmission occurs at a different time, but most will peak around 5 time units after infection, with some variation
+#Note again that here max.time is a function of x and not t (not a core function but individual-based parameters), and x enters the function as the number of draws to make.
+
+param_pTrans.B = list(max.time=max.time_fct)
+#Since pTrans.B is not dependent on the “absolute” time of the simulation, timeDep.pTrans.B=FALSE. It depends on the host's own timeline and not the overall simulation time.
+#However, since we make use of individual-based parameters, we have to provide a param.pTrans as a list of functions. The name of each element of the list should have the same name as the core function (here pTrans.B) uses as argument, as shown here
+
+
+
+####RUNNING
+#Once nosoiSim is set up, you can run the simulation (here the “seed” ensures that you will obtain the same results as in this tutorial):
+
+library(nosoi)
+
+#HostA ------------------------------------
+
+#pExit
+p_Exit_fct.A  <- function(t){return(0.08)}
+
+#nContact
+n_contact_fct.A = function(t){abs(round(rnorm(1, 0.5, 1), 0))}
+
+#pTrans
+p_Trans_fct.A <- function(t,p_max,t_incub){
+  if(t < t_incub){p=0}
+  if(t >= t_incub){p=p_max}
+  return(p)
+}
+
+t_incub_fct <- function(x){rnorm(x,mean = 7,sd=1)}
+p_max_fct <- function(x){rbeta(x,shape1 = 5,shape2=2)}
+
+param_pTrans.A = list(p_max=p_max_fct,t_incub=t_incub_fct)
+
+#Host B ------------------------------------
+
+#pExit
+p_Exit_fct.B  <- function(t,prestime){(sin(prestime/(2*pi*10))+1)/16}
+
+#nContact
+n_contact_fct.B = function(t){sample(c(0,1,2),1,prob=c(0.6,0.3,0.1))}
+
+#pTrans
+p_Trans_fct.B <- function(t, max.time){
+  dnorm(t, mean=max.time, sd=2)*5
+}
+
+max.time_fct <- function(x){rnorm(x,mean = 5,sd=1)}
+
+param_pTrans.B = list(max.time=max.time_fct)
+
+# Starting the simulation ------------------------------------
+
+set.seed(606)
+SimulationDual <- nosoiSim(type="dual", popStructure="none",
+                           length.sim=100, 
+                           max.infected.A=100, 
+                           max.infected.B=100, 
+                           
+                           init.individuals.A=1, 
+                           init.individuals.B=0, 
+                           
+                           nContact.A=n_contact_fct.A,
+                           param.nContact.A=NA,
+                           timeDep.nContact.A=FALSE,
+                           pExit.A=p_Exit_fct.A,
+                           param.pExit.A=NA,
+                           timeDep.pExit.A=FALSE,
+                           pTrans.A=p_Trans_fct.A,
+                           param.pTrans.A=param_pTrans.A,
+                           timeDep.pTrans.A=FALSE,
+                           prefix.host.A="H",
+                           
+                           nContact.B=n_contact_fct.B,
+                           param.nContact.B=NA,
+                           timeDep.nContact.B=FALSE,
+                           pExit.B=p_Exit_fct.B,
+                           param.pExit.B=NA,
+                           timeDep.pExit.B=TRUE,
+                           pTrans.B=p_Trans_fct.B,
+                           param.pTrans.B=param_pTrans.B,
+                           timeDep.pTrans.B=FALSE,
+                           prefix.host.B="V",
+                           
+                           print.progress=FALSE)
+
+#The simulation has run for 43 units of time and a total of 101 (A) and 92 (B) hosts have been infected.
+#Once the simulation has finished, it reports the number of time units for which the simulation has run (43), and the maximum number of infected hosts A (101) and hosts B (92). Note that the simulation has stopped here before reaching length.sim as it has crossed the max.infected.A threshold set at 100.
+
+
+
+#-------------------------------------------altering the simulation-------------------------------
+
+
+
+

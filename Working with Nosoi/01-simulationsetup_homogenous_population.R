@@ -234,6 +234,10 @@ SimulationDual <- nosoiSim(type="dual", popStructure="none",
 
 
 
+
+
+
+
 #---------------------------------Trying to Visualize---------------------------------------------
 
 library(ggplot2)
@@ -263,7 +267,17 @@ ggplot(df_incidence, aes(x = time, y = n, color = Host)) +
 
 
 
-#-------------------------------------------altering the simulation-------------------------------
+
+
+
+
+
+
+
+
+
+
+#-------------------------------------------Altering the simulation-------------------------------
 
 ######Single host
 library(nosoi)  
@@ -272,7 +286,7 @@ library(nosoi)
 p_Exit_fct  <- function(t){return(0.001)}
 
 #nContact
-n_contact_fct = function(t){abs(round(rnorm(1, 0.5, 1), 0))}
+n_contact_fct = function(t){abs(round(rnorm(1, 10, 1), 0))}
 
 #pTrans
 p_Trans_fct <- function(t,p_max,t_incub){
@@ -281,8 +295,8 @@ p_Trans_fct <- function(t,p_max,t_incub){
   return(p)
 }
 
-t_incub_fct <- function(x){rnorm(x,mean = 7,sd=1)}
-p_max_fct <- function(x){rbeta(x,shape1 = 5,shape2=2)}
+t_incub_fct <- function(x){rnorm(x,mean = 2,sd=1)}
+p_max_fct <- function(x){rbeta(x,shape1 = 10,shape2=2)}
 
 param_pTrans = list(p_max=p_max_fct,t_incub=t_incub_fct)
 
@@ -327,6 +341,90 @@ SimulationSingle <- nosoiSim(type="single", popStructure="none",
                              print.progress=FALSE)
 
 
+
+
+
+
+
+
+
+######Dual host
+#HostA ------------------------------------
+
+#pExit
+p_Exit_fct.A  <- function(t){return(0.08)}
+
+#nContact
+n_contact_fct.A = function(t){abs(round(rnorm(1, 5, 1), 0))}
+
+#pTrans
+p_Trans_fct.A <- function(t,p_max,t_incub){
+  if(t < t_incub){p=0}
+  if(t >= t_incub){p=p_max}
+  return(p)
+}
+
+t_incub_fct <- function(x){rnorm(x,mean = 7,sd=1)}
+p_max_fct <- function(x){rbeta(x,shape1 = 5,shape2=2)}
+
+param_pTrans.A = list(p_max=p_max_fct,t_incub=t_incub_fct)
+
+#Host B ------------------------------------
+
+#pExit
+p_Exit_fct.B  <- function(t,prestime){(sin(prestime/(2*pi*10))+1)/16}
+
+#nContact
+n_contact_fct.B = function(t){sample(c(0,1,2),1,prob=c(0.6,0.3,0.1))}
+
+#pTrans
+p_Trans_fct.B <- function(t, max.time){
+  dnorm(t, mean=max.time, sd=2)*5
+}
+
+max.time_fct <- function(x){rnorm(x,mean = 5,sd=1)}
+
+param_pTrans.B = list(max.time=max.time_fct)
+
+# Starting the simulation ------------------------------------
+SimulationDual <- nosoiSim(type="dual", popStructure="none",
+                           length.sim=100, 
+                           max.infected.A=1000, 
+                           max.infected.B=1000, 
+                           
+                           init.individuals.A=1, 
+                           init.individuals.B=0, 
+                           
+                           nContact.A=n_contact_fct.A,
+                           param.nContact.A=NA,
+                           timeDep.nContact.A=FALSE,
+                           pExit.A=p_Exit_fct.A,
+                           param.pExit.A=NA,
+                           timeDep.pExit.A=FALSE,
+                           pTrans.A=p_Trans_fct.A,
+                           param.pTrans.A=param_pTrans.A,
+                           timeDep.pTrans.A=FALSE,
+                           prefix.host.A="H",
+                           
+                           nContact.B=n_contact_fct.B,
+                           param.nContact.B=NA,
+                           timeDep.nContact.B=FALSE,
+                           pExit.B=p_Exit_fct.B,
+                           param.pExit.B=NA,
+                           timeDep.pExit.B=TRUE,
+                           pTrans.B=p_Trans_fct.B,
+                           param.pTrans.B=param_pTrans.B,
+                           timeDep.pTrans.B=FALSE,
+                           prefix.host.B="V",
+                           
+                           print.progress=FALSE)
+
+
+
+
+
+
+#-----------------------------------------------
 #####THIS DOES NOT WORK whoops
 #Try running multiple simulations and summarize these results
 # Function to run a single simulation

@@ -7,11 +7,11 @@ rm(list = ls())
 #Google docs link for explanation of all functions/options/parameters:
 #https://docs.google.com/document/d/1KgfNs9LIZh3C33dI75nKRRYTw70rzpz16HkiB_hLLpg/edit?tab=t.0
 
-######Setting up the simulation
+#-------Setting up the simulation
 #Setting up a basic pathogen spread simulation in a homogeneous population with no structured environment. Function nosoiSim is the main wrapper for running simulations in nosoi, in this case we use singleNone "single host, no structure" setup. So we start by providing the options type="single" and popStructure="none". 
 SimulationSingle <- nosoiSim(type="single", popStructure="none", ...)
 
-#General parameters
+#-------General parameters
 SimulationSingle <- nosoiSim(type="single", popStructure="none",
                              length.sim=300, max.infected=1000, init.individuals=1, ...)
 
@@ -25,7 +25,7 @@ SimulationDual <- nosoiSim(type="dual", popStructure="none", ...)
 ################RUNNING NOSOI
 
 ######Single host
-######Simple simulation for a single host pathogen
+#-------Simple simulation for a single host pathogen
 p_Exit_fct  <- function(t){return(0.08)} 
 #Contstant value os 0.08 is chosen, which means an infected host has 8% chance to                  leave the simulation at each unit of time
 

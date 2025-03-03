@@ -57,8 +57,8 @@ p_Trans_fct <- function(t, p_max, t_incub){
 
 t_incub_fct <- function(x){rnorm(x, mean=7, sd=1)}
 p_max_fct <- function(x){rbeta(x, shape1=5, shape2=2)}
-#Because each host is different (slightly different biotic and abiotic factors), you can expect each host to exhibit differences in the dynamics of infection, and hence the probability of transmission over time. Thus, t_incub and p_max will be sampled for each host individually according to a certain distribution. t_incub will be sampled from a normal distribution of mean=7 and sd= 1, while p_max will be sampled from a beta distribution with shape parameters 𝛼= 5 and𝛽=2
-    #Note that here t_incub and p_max are functions of x and not t (they are not core functions but     individual-based parameters), and x enters the function as the number of draws to make.
+#Because each host is different (slightly different biotic and abiotic factors), you can expect each host to exhibit differences in the dynamics of infection, and hence the probability of transmission over time. Thus, t_incub and p_max will be sampled for each host individually according to a certain distribution. t_incub will be sampled from a normal distribution of mean=7 and sd= 1, while p_max will be sampled from a beta distribution with shape parameters𝛼= 5 and𝛽=2
+   #Note that here t_incub and p_max are functions of x and not t (they are not core functions but     individual-based parameters), and x enters the function as the number of draws to make.
 
 param_pTrans = list(p_max=p_max_fct,t_incub=t_incub_fct)
 #pTrans is not dependent of the “absolute” time of the simulation nor it is dependent of the hosts location, hence timeDep.pTrans=FALSE and diff.pTrans=FALSE. However, since we make use of individual-based parameters, we have to provide a param.pTrans as a list of functions. The name of each element within this list should have the same name that the core function (here pTrans) uses as argument

@@ -142,7 +142,7 @@ p_Exit_fctB  <- function(t,prestime){(sin(prestime/(2*pi*10))+1)/16} #for a peri
 
 p_Move_fct.B  <- NA
 #We will assume here that the hosts B do not move. pMove.B will then be set to NA.
-#ince pMove.B is not dependent on the location, diff.pMove.B=FALSE. Similarly, there is no use of the “absolute” time of the simulation nor individual-based parameters, so param.pMove.B=NA, and timeDep.pMove.B=FALSE.
+#since pMove.B is not dependent on the location, diff.pMove.B=FALSE. Similarly, there is no use of the “absolute” time of the simulation nor individual-based parameters, so param.pMove.B=NA, and timeDep.pMove.B=FALSE.
 
 n_contact_fct.B = function(t){sample(c(0,1,2),1,prob=c(0.6,0.3,0.1))}
 #For nContact.B, we choose a constant function that will sample a value out of a provided list of probabilities
@@ -276,4 +276,137 @@ SimulationDual <- nosoiSim(type="dual", popStructure="discrete",
 #Once the simulation has finished, it reports the number of time units for which the simulation has run (34), and the maximum number of infected hosts A (106) and hosts B (129). Note that the simulation has stopped here before reaching length.sim as it has crossed the max.infected.A threshold set at 100.
 
 summary(SimulationDual)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#---------------------------Altering simulation---------------------------------------------------
+#Transition matrix
+transition.matrix <- matrix(c(0,0.2,0.4,0.5,0,0.6,0.5,0.8,0),nrow = 3, ncol = 3,dimnames=list(c("A","B","C"),c("A","B","C")))
+
+#Host A -----------------------------------
+
+#pExit
+p_Exit_fct  <- function(t,current.in){
+  if(current.in=="A"){return(0.02)}
+  if(current.in=="B"){return(0.05)}
+  if(current.in=="C"){return(0.1)}
+}
+
+#pMove
+p_Move_fct  <- function(t){return(0.001)}
+
+#nContact
+n_contact_fct = function(t){abs(round(rnorm(1, 5, 1), 0))}
+
+#pTrans
+proba <- function(t,p_max,t_incub){
+  if(t <= t_incub){p=0}
+  if(t >= t_incub){p=p_max}
+  return(p)
+}
+
+t_incub_fct <- function(x){rnorm(x,mean = 5,sd=1)}
+p_max_fct <- function(x){rbeta(x,shape1 = 5,shape2=2)}
+
+param_pTrans = list(p_max=p_max_fct,t_incub=t_incub_fct)
+
+#Host B -----------------------------------
+
+#pExit
+p_Exit_fct.B  <- function(t,prestime){(sin(prestime/(2*pi*10))+1)/16}
+
+#pMove
+p_Move_fct.B  <- NA
+
+#nContact
+n_contact_fct.B = function(t){sample(c(0,1,2),1,prob=c(0.6,0.3,0.1))}
+
+#pTrans
+p_Trans_fct.B <- function(t, max.time){
+  dnorm(t, mean=max.time, sd=2)*5
+}
+
+max.time_fct <- function(x){rnorm(x,mean = 10,sd=1)}
+
+param_pTrans.B = list(max.time=max.time_fct)
+
+SimulationDual <- nosoiSim(type="dual", popStructure="discrete",
+                           length.sim=300, 
+                           max.infected.A=1000,
+                           max.infected.B=2000,
+                           init.individuals.A=1,
+                           init.individuals.B=0,
+                           init.structure.A="A",
+                           init.structure.B=NA,
+                           structure.matrix.A=transition.matrix,
+                           structure.matrix.B=transition.matrix,
+                           
+                           pExit.A = p_Exit_fct,
+                           param.pExit.A=NA,
+                           timeDep.pExit.A=FALSE,
+                           diff.pExit.A=TRUE,
+                           
+                           pMove.A = p_Move_fct,
+                           param.pMove.A=NA,
+                           timeDep.pMove.A=FALSE,
+                           diff.pMove.A=FALSE,
+                           
+                           nContact.A=n_contact_fct,
+                           param.nContact.A=NA,
+                           timeDep.nContact.A=FALSE,
+                           diff.nContact.A=FALSE,
+                           
+                           pTrans.A = proba,
+                           param.pTrans.A = list(p_max=p_max_fct,t_incub=t_incub_fct),
+                           timeDep.pTrans.A=FALSE,
+                           diff.pTrans.A=FALSE,
+                           prefix.host.A="H",
+                           
+                           pExit.B = p_Exit_fct.B,
+                           param.pExit.B=NA,
+                           timeDep.pExit.B=TRUE,
+                           diff.pExit.B=FALSE,
+                           
+                           pMove.B = p_Move_fct.B,
+                           param.pMove.B=NA,
+                           timeDep.pMove.B=FALSE,
+                           diff.pMove.B=FALSE,
+                           
+                           nContact.B=n_contact_fct.B,
+                           param.nContact.B=NA,
+                           timeDep.nContact.B=FALSE,
+                           diff.nContact.B=FALSE,
+                           
+                           pTrans.B = p_Trans_fct.B,
+                           param.pTrans.B = param_pTrans.B,
+                           timeDep.pTrans.B=FALSE,
+                           diff.pTrans.B=FALSE,
+                           prefix.host.B="V",
+                           
+                           print.progress=FALSE)
 

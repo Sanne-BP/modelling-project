@@ -326,3 +326,227 @@ SimulationDual <- nosoiSim(type="dual", popStructure="continuous",
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+##################################################################################################
+#Altering simulation: single host
+test.raster <- raster(nrows=50, ncols=50, xmn=-25, xmx=25, ymn=-25, ymx=25)
+test.raster[] <- runif(50*50, -80, 150)
+test.raster <- focal(test.raster, w=matrix(1, 3, 3), mean)
+plot(test.raster)
+
+#Starting position will be
+start.pos <- c(0,0) # c(x,y)
+
+#pExit
+p_Exit_fct  <- function(t, current.env.value){
+  if(current.env.value > 50){p=0.001}
+  if(current.env.value < 50 && current.env.value > 20){p=0.001}
+  if(current.env.value < 20){p=0.01}
+  return(p)}
+
+#pMove
+p_Move_fct  <- function(t){return(0.5)}
+
+#sdMove
+sd_Move_fct <- function(t){return(max(0.5 - 0.01*t, 0.05))}
+
+#nContact
+n_contact_fct = function(t){abs(round(rnorm(1, 2, 1), 0))}
+
+#pTrans
+proba <- function(t,p_max,t_incub){
+  if(t <= t_incub){p=0}
+  if(t >= t_incub){p=p_max}
+  return(p)}
+
+t_incub_fct <- function(x){rnorm(x,mean = 5,sd=1)}
+p_max_fct <- function(x){rbeta(x,shape1 = 5,shape2=2)}
+
+param_pTrans = list(p_max=p_max_fct,t_incub=t_incub_fct)
+
+# Starting the simulation ------------------------------------
+SimulationSingle <- nosoiSim(type="single", popStructure="continuous",
+                             length.sim=300, max.infected=10000, init.individuals=100, 
+                             
+                             init.structure=start.pos, 
+                             
+                             structure.raster=test.raster,
+                             
+                             pExit = p_Exit_fct,
+                             param.pExit = NA,
+                             timeDep.pExit=FALSE,
+                             diff.pExit=TRUE,
+                             
+                             pMove = p_Move_fct,
+                             param.pMove = NA,
+                             timeDep.pMove=FALSE,
+                             diff.pMove=FALSE,
+                             
+                             sdMove = sd_Move_fct,
+                             param.sdMove = NA,
+                             timeDep.sdMove=FALSE,
+                             diff.sdMove=FALSE,
+                             
+                             attracted.by.raster=TRUE,
+                             
+                             nContact=n_contact_fct,
+                             param.nContact=NA,
+                             timeDep.nContact=FALSE,
+                             diff.nContact=FALSE,
+                             
+                             pTrans = proba,
+                             param.pTrans = list(p_max=p_max_fct,t_incub=t_incub_fct),
+                             timeDep.pTrans=FALSE,
+                             diff.pTrans=FALSE,
+                             
+                             prefix.host="H",
+                             print.progress=FALSE,
+                             print.step=10)
+
+
+
+
+
+
+
+
+#-------------------------Altering simulation: dual host
+test.raster <- raster(nrows=50, ncols=50, xmn=-25, xmx=25, ymn=-25, ymx=25)
+test.raster[] <- runif(50*50, -80, 150)
+test.raster <- focal(test.raster, w=matrix(1, 3, 3), mean)
+plot(test.raster)
+
+#Starting position will be
+start.pos <- c(0,0) # c(x,y)
+
+#Host A -----------------------------------
+
+#pExit
+p_Exit_fct  <- function(t, current.env.value){
+  if(current.env.value > 70){p=0.02}
+  if(current.env.value < 70 && current.env.value > 40){p=0.04}
+  if(current.env.value < 40){p=0.08}
+  return(p)}
+
+#pMove
+p_Move_fct  <- function(t){return(0.5)}
+
+#sdMove
+sd_Move_fct <- function(t){return(max(0.5 - 0.01*t, 0.05))}
+
+#nContact
+n_contact_fct = function(t){abs(round(rnorm(1, 2, 1), 0))}
+
+#pTrans
+proba <- function(t,p_max,t_incub){
+  if(t <= t_incub){p=0}
+  if(t >= t_incub){p=p_max}
+  return(p)}
+
+t_incub_fct <- function(x){rnorm(x,mean = 5,sd=1)}
+p_max_fct <- function(x){rbeta(x,shape1 = 5,shape2=2)}
+
+param_pTrans = list(p_max=p_max_fct,t_incub=t_incub_fct)
+
+#Host B -----------------------------------
+
+#pExit
+p_Exit_fct.B  <- function(t){(sin(t/(2*pi*10))+1)/16}
+
+#pMove
+p_Move_fct.B <- function(t){ return(0.5) }  
+
+#pMove
+sd_Move_fct.B <- function(t){ return(0.3) }  
+
+#nContact
+n_contact_fct.B = function(t){sample(c(0,1,2),1,prob=c(0.6,0.3,0.1))}
+
+#pTrans
+p_Trans_fct.B <- function(t, max.time){
+  dnorm(t, mean=max.time, sd=2)*5}
+
+max.time_fct <- function(x){rnorm(x,mean = 5,sd=1)}
+
+param_pTrans.B = list(max.time=max.time_fct)
+
+# Starting the simulation ------------------------------------
+SimulationDual <- nosoiSim(type="dual", popStructure="continuous",
+                           length.sim=300, 
+                           max.infected.A=100,
+                           max.infected.B=200,
+                           init.individuals.A=1,
+                           init.individuals.B=0,
+                           init.structure.A=start.pos,
+                           init.structure.B=NA,
+                           structure.raster.A=test.raster,
+                           structure.raster.B=test.raster,
+                           
+                           pExit.A = p_Exit_fct,
+                           param.pExit.A = NA,
+                           timeDep.pExit.A=FALSE,
+                           diff.pExit.A=TRUE,
+                           
+                           pMove.A = p_Move_fct,
+                           param.pMove.A = NA,
+                           timeDep.pMove.A=FALSE,
+                           diff.pMove.A=FALSE,
+                           
+                           sdMove.A = sd_Move_fct,
+                           param.sdMove.A = NA,
+                           timeDep.sdMove.A=FALSE,
+                           diff.sdMove.A=FALSE,
+                           attracted.by.raster.A=TRUE,
+                           
+                           nContact.A=n_contact_fct,
+                           param.nContact.A=NA,
+                           timeDep.nContact.A=FALSE,
+                           diff.nContact.A=FALSE,
+                           
+                           pTrans.A = proba,
+                           param.pTrans.A = list(p_max=p_max_fct,t_incub=t_incub_fct),
+                           timeDep.pTrans.A=FALSE,
+                           diff.pTrans.A=FALSE,
+                           prefix.host.A="H",
+                           
+                           pExit.B = p_Exit_fct.B,
+                           param.pExit.B = list(),
+                           timeDep.pExit.B=FALSE,
+                           diff.pExit.B=FALSE,
+                           
+                           pMove.B = p_Move_fct.B,
+                           param.pMove.B = NA,
+                           timeDep.pMove.B=FALSE,
+                           diff.pMove.B=FALSE,
+                           
+                           sdMove.B = sd_Move_fct.B,
+                           param.sdMove.B = NA,
+                           timeDep.sdMove.B=FALSE,
+                           diff.sdMove.B=FALSE,
+                           attracted.by.raster.B=FALSE,
+                           
+                           nContact.B=n_contact_fct.B,
+                           param.nContact.B=NA,
+                           timeDep.nContact.B=FALSE,
+                           diff.nContact.B=FALSE,
+                           
+                           pTrans.B = p_Trans_fct.B,
+                           param.pTrans.B = param_pTrans.B,
+                           timeDep.pTrans.B=FALSE,
+                           diff.pTrans.B=FALSE,
+                           prefix.host.B="V",
+                           
+                           print.progress=FALSE)
+  

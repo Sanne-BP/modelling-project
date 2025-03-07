@@ -215,3 +215,43 @@ SimulationDual <- nosoiSim(type="dual", popStructure="none",
 #As we can see, the isolate Haiti2012 yielded less “big outbreaks” (> 100 humans infected) compared to the two other isolates, which is coherent with its slower within-host dynamics (i.e. variations in vector competence, defined as the intrinsic ability of a vector to carry and transmit a pathogen). This result is similar to the one obtained in the original paper which used an earlier version of nosoi in a closed population.
 
 #With a set of simulated transmission chains and associated metadata anchoring them in time, and sometimes space, nosoi offers a perfect setting to explore how within-host dynamics can drastically influence a pathogen’s epidemiology. Changes in any of the parameters are easy to implement, including drastic changes on how a certain probability or number is computed, allowing for maximum flexibility.
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(data.table)  # Since nosoi uses data.table
+
+# Extract infection data
+data_A <- as.data.frame(SimulationDual$host.info.A$table.hosts)
+data_B <- as.data.frame(SimulationDual$host.info.B$table.hosts)
+
+# Add a column to differentiate host types
+data_A$host_type <- "Humans (H)"
+data_B$host_type <- "Mosquitoes (M)"
+
+#filter out columns for data_A
+data_A <- data_A[,c("hosts.ID","inf.by","inf.time","out.time", "active", "host_type")]
+data_B <- data_B[,c("hosts.ID","inf.by","inf.time","out.time", "active", "host_type")]
+
+# Combine both datasets
+data_combined <- rbind(data_A, data_B)
+
+# Summarize number of infections by host type
+summary_data <- data_combined |>
+  group_by(host_type) |>
+  summarise(count = n(), .groups = "drop")
+
+# Convert host_type to factor for proper ordering
+summary_data$host_type <- factor(summary_data$host_type, levels = c("Humans (H)", "Mosquitoes (M)"))
+
+# Plot the data
+ggplot(summary_data, aes(x = count, y = host_type, fill = host_type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Humans (H)" = "#619CFF", "Mosquitoes (M)" = "#F8766D")) +
+  theme(
+    axis.text = element_text(color = "white"),
+    axis.title = element_text(color = "white"),
+    legend.position = "right"
+  ) +
+  coord_flip()

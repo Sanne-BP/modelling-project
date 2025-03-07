@@ -293,11 +293,141 @@ animated.plot <- ggplot() +
         plot.caption=element_text(size=10)) +
   labs(title = "Time: {closest_state}")
 
-animate(animated.plot, nframes=test.nosoiA$total.time*2+10,duration=40,end_pause=10)
+#animate(animated.plot, nframes=test.nosoiA$total.time*2+10,duration=40,end_pause=10)
+
+#Does not work really work, but the idea is there once again
+
+
+
+
+#---------------Epidemiological analysis
+#As interesting as the visualization might be, we can also explore the epidemic parameters, for example the “real” 𝑅0, defined as the average number of cases one case generates, often estimated in epidemiological studies. To this end, we can use the following code:
+R0.sim <- getR0(test.nosoiA)
+
+#The mean value for 𝑅0is 1.13, which is coherent with epidemiological estimates for Ebola virus. Its distribution is also coherent with most hosts not transmitting
+
+#The two following figures also give the epidemiological dynamics of the simulation:
+dynamic.sim <- getDynamic(test.nosoiA)
+cumulative.sim <- getCumulative(test.nosoiA)
+
+ggplot(data=dynamic.sim, aes(x=t, y=Count)) + geom_line() + theme_minimal() + 
+  labs(x="Time (t)",y="Number of active infected hosts")
+
+ggplot(data=cumulative.sim, aes(x=t, y=Count)) + geom_line() + theme_minimal() + 
+  labs(x="Time (t)",y="Cumulative count of infected hosts")
+
+
+
+
+#---------------Transmission chain
+#Since nosoi relies on the simulation of a transmission chain, we can also visualize the transmission in geographic space. To do this, we will first generate the transmission tree as a phylogenetic tree-like object by using the getTransmissionTree function implemented in nosoi:
+test.nosoiA.tree <- getTransmissionTree(test.nosoiA)
+
+#This function gives you a treedata object that can be visualized as a phylogenetic tree with the package:
+library(ggtree)
+ggtree(test.nosoiA.tree, color = "gray30") + geom_nodepoint(color = "gray30") + geom_tippoint(color = "gray30") + # geom_tiplab(aes(label=host)) + 
+  theme_tree2() + xlab("Time (t)") + theme(legend.position = c(0,0.8), 
+                                           legend.title = element_blank(),
+                                           legend.key = element_blank())
+
+#Of course this does not give us much information about the spatial distribution of this transmission tree. We can use data contained into this treedata object to plot our transmission tree on our environmental raster:
+  
+# Extracting node data from the tree (including long/lat coordinates):
+tree.node <- tidytree::as_tibble(test.nosoiA.tree)
+
+# Joining table to get coordinates of starting and ending nodes:
+library(dplyr)
+tree.links <- left_join(tree.node, tree.node, by = c("parent" = "node"), suffix = c(".to", ".from"))
+
+#Plotting everything:
+ggplot() +
+  layer_spatial(pop_raster) + labs(x="", y="") +  
+  scale_fill_viridis(trans = "log1p",option="A",limits=c(0,NA),na.value="NA", 
+                     name="Environmental\nvalue (number of\ninhabitants)", position="bottom", 
+                     breaks=c(6,60,600,6000,60000),labels=c(6,60,600,6000,60000)) + 
+  scale_color_viridis(option="D",limits=c(0,NA),na.value="white", name="time") + 
+  theme(panel.background = element_blank(), panel.ontop = FALSE,
+        panel.grid.major = element_line(size=0.25, linetype="dashed", colour ="grey70"),
+        axis.ticks=element_blank(), plot.caption=element_text(size=10)) +
+  geom_segment(data=tree.links, aes(x = state.x.from, y = state.y.from, xend = state.x.to, yend = state.y.to),
+               color="gray50") + 
+  geom_point(data=tree.node, aes(x=state.x, y=state.y,color=time))
+
+library(terra)  # terra is more efficient than raster for handling spatial data
+
+# Reduce resolution by a factor of 5 (adjust as needed)
+low_res_raster <- aggregate(pop_raster, fact = 10, fun = mean)
+tree.node.small <- tree.node[sample(nrow(tree.node), 5000), ]  # Limit to 5000 points
+tree.links.small <- tree.links[sample(nrow(tree.links), 2000), ]  # Limit to 2000 links
+tree.links.small <- tree.links.small[1:100, ]  # Reduce number of links
+tree.node.small <- tree.node.small[1:100, ]  # Reduce number of nodes
+
+
+
+# Use the lower-resolution raster in your plot
+ggplot() +
+  layer_spatial(low_res_raster) + labs(x="", y="") +  
+  scale_fill_viridis(trans = "log1p",option="A",limits=c(0,NA),na.value="NA", 
+                     name="Environmental\nvalue (number of\ninhabitants)", position="bottom", 
+                     breaks=c(6,60,600,6000,60000),labels=c(6,60,600,6000,60000)) + 
+  scale_color_viridis(option="D",limits=c(0,NA),na.value="white", name="time") + 
+  theme(panel.background = element_blank(), panel.ontop = FALSE,
+        panel.grid.major = element_line(linewidth=0.25, linetype="dashed", colour ="grey70"),
+        axis.ticks=element_blank(), plot.caption=element_text(size=10)) +
+  geom_segment(data=tree.links.small, aes(x = state.x.from, y = state.y.from, 
+                                          xend = state.x.to, yend = state.y.to),
+               color="gray50") + 
+  geom_point(data=tree.node.small, aes(x=state.x, y=state.y,color=time))
+
+
+#DOES NOT WORKKKKKKKKKK 
 
 
 
 
 
+
+
+#The full transmission chain is a bit messy, because of the number of infected individuals. We can also subsample it randomly. We will here select 250 individuals sampled at the time of their exit (either death or recovery):
+
+#Extracts data from the nosoiSim object:
+test.table.hosts <- getTableHosts(test.nosoiA)
+test.nosoiA.tree <- getTransmissionTree(test.nosoiA)
+
+#Sampling the names of individuals to be sampled:
+set.seed(5905950)
+sampled.hosts <- sample(subset(test.table.hosts, active == 0)$hosts.ID, 250)
+
+#Subsampling:
+test.nosoiA.tree.sampled.exiting <- sampleTransmissionTreeFromExiting(test.nosoiA.tree, sampled.hosts)
+
+#This new tree can be plotted as before:
+library(ggtree)
+ggtree(test.nosoiA.tree.sampled.exiting, color = "gray30") + geom_nodepoint(color = "gray30") + geom_tippoint(color = "gray30") + # geom_tiplab(aes(label=host)) + 
+  theme_tree2() + xlab("Time (t)") + theme(legend.position = c(0,0.8), 
+                                           legend.title = element_blank(),
+                                           legend.key = element_blank())
+
+#We can also draw it in geographic space (WELL, I FOR SURE CANNOT):
+# Extracting node data from the tree (including long/lat coordinates):
+tree.node <- tidytree::as_tibble(test.nosoiA.tree.sampled.exiting)
+
+# Joining table to get coordinates of starting and ending nodes:
+library(dplyr)
+tree.links <- left_join(tree.node, tree.node, by = c("parent" = "node"), suffix = c(".to", ".from"))
+
+#plotting everything
+ggplot() +
+  layer_spatial(pop_raster) + labs(x="", y="") +  
+  scale_fill_viridis(trans = "log1p",option="A",limits=c(0,NA),na.value="NA", 
+                     name="Environmental\nvalue (number of\ninhabitants)", position="bottom", 
+                     breaks=c(6,60,600,6000,60000),labels=c(6,60,600,6000,60000)) + 
+  scale_color_viridis(option="D",limits=c(0,NA),na.value="white", name="time") + 
+  theme(panel.background = element_blank(), panel.ontop = FALSE,
+        panel.grid.major = element_line(size=0.25, linetype="dashed", colour ="grey70"),
+        axis.ticks=element_blank(), plot.caption=element_text(size=10)) +
+  geom_segment(data=tree.links, aes(x = state.x.from, y = state.y.from, xend = state.x.to, yend = state.y.to),
+               color="gray50") + 
+  geom_point(data=tree.node, aes(x=state.x, y=state.y,color=time))
 
 

@@ -1,4 +1,4 @@
-##################Pathogen Example: Spread of an Ebola-like virus in continuous space###############
+##################Pathogen Example: Spread of an Ebola-like virus in continuous space#############
 rm(list = ls())
 
 #-----------------Introduction

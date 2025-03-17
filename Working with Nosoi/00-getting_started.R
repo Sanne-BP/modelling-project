@@ -18,7 +18,7 @@ library(nosoi)
 p_Function  <- function(t){0.08}
             #nosoi expects time-dependent functions, so a function must include t in its definition
 p_Function  <- function(t){plogis(t,10,2)}
-            #plogis(t, 10, 2) represents a logistic growth function. this means the probability                starts small and gradually icreases, approaching 1 over time. Parameters (10,2) 10 >               midpoint where probability is 50%, 2 > controls how fast probability increases. 
+            #plogis(t, 10, 2) represents a logistic growth function. this means the probability                starts small and gradually increases, approaching 1 over time. Parameters (10,2) 10 >              midpoint where probability is 50%, 2 > controls how fast probability increases. 
             #If this function controls probability of exiting infection, an infected host would                have a low chance of exiting early but a higher chance of exiting after 10 time steps
 
 #prestime

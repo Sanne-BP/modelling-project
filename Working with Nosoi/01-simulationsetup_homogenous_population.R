@@ -27,7 +27,7 @@ SimulationDual <- nosoiSim(type="dual", popStructure="none", ...)
 ######Single host
 #-------Simple simulation for a single host pathogen
 p_Exit_fct  <- function(t){return(0.08)} 
-#Contstant value os 0.08 is chosen, which means an infected host has 8% chance to                  leave the simulation at each unit of time
+#Constant value of 0.08 is chosen, which means an infected host has 8% chance to                  leave the simulation at each unit of time
 
 #pExit, like the other core functions, has to be a function of t, even if t is not used. Since pExit is constant here, there is no use for the "absolute" time of the simulation nor for the individual-based parameters. That is because the probability of an infected host leaving the simulation does not change over time - it is always 8% per time step. So param.pExit=NA, and timeDep.pExit=FALSE.
 

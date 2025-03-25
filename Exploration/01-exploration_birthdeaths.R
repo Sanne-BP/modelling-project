@@ -173,8 +173,8 @@ n_contact_fct <- function(t, pop_size) {
 
 #This function is not correct because it returns a vector of the same value repeated current_pop times. return(rep(n_contacts, current_pop)) → This creates a vector with the same contact number repeated for every individual in the population, rather than per infected individual.
 
-n_contact_fct <- function(t, pop_sim) {
-  current_pop <- pop_sim[min(t, length(pop_sim))]  # Get current population size
+n_contact_fct <- function(t, pop_size) {
+  current_pop <- pop_size[min(t, length(pop_size))]  # Get current population size
   base_rate <- 0.5  # Base mean contacts per individual (from original function)
   # Scale mean contacts per individual based on population size
   scaled_mean <- base_rate * (current_pop / 1000)  
@@ -187,7 +187,7 @@ n_contact_fct <- function(t, pop_sim) {
 
 #----------------------------now trying to integrate this part into the nosoi model (example model below in this script)
 n_contact_fct <- function(t) {
-  current_pop <- pop_sim[min(t, length(pop_sim))]  # Get current population size
+  current_pop <- pop_size[min(t, length(pop_size))]  # Get current population size
   base_rate <- 0.5  
   scaled_mean <- base_rate * (current_pop / 1000)  
   n_contacts_i <- abs(round(rnorm(1, scaled_mean, 1), 0))  
@@ -239,8 +239,72 @@ SimulationSingle <- nosoiSim(type = "single", popStructure = "none",
                              prefix.host = "H",
                              print.progress = FALSE)
 
+cumulative.table <- getCumulative(SimulationSingle)
+ggplot(data=cumulative.table, aes(x=t, y=Count)) + 
+  geom_line() + 
+  theme_minimal() + 
+  labs(x="Time (t)",y="Cumulative count of infected hosts")
+
+dynamics.table <- getDynamic(SimulationSingle)
+ggplot(data=dynamics.table, aes(x=t, y=Count)) + 
+  geom_line() + 
+  theme_minimal() + 
+  labs(x="Time (t)",y="Number of active infected hosts")
+
+p3 <- ggplot(data=data.frame(Time=1:length(pop_size), 
+                             Population=pop_size), aes(x=Time, y=Population)) +
+  geom_line(color="blue", linewidth=0.5) +
+  theme_minimal() +
+  labs(x="Time Steps", y="Population Size", title="Population Size Dynamics")
+
+# Combine both cumulative and active infected data for comparison
+combined_data <- data.frame(
+  Time = dynamics.table$t,
+  ActiveInfected = dynamics.table$Count,
+  CumulativeInfected = cumulative.table$Count
+)
+
+p4 <- ggplot(combined_data) +
+  geom_line(aes(x=Time, y=ActiveInfected, color="Active Infected"), linewidth=1) +
+  geom_line(aes(x=Time, y=CumulativeInfected, color="Cumulative Infected"), linewidth=1) +
+  labs(x="Time (t)", y="Number of Infected Hosts", title="Active vs Cumulative Infections") +
+  scale_color_manual(values=c("red", "blue")) +
+  theme_minimal()
+
+library(patchwork)
+p3 + p4 + plot_layout(ncol=1)
+ggsave("Plots/Fig_exploration_birthdeaths", width = 8, height = 6, dpi = 300)
 
 
+#Well, it does successfully run, but it is of course not clearly visual if it is actually working.
+summary(SimulationSingle)
+
+#try to visualize it, maybe that helps?
+library(ggplot2)
+library(viridis)
+library(igraph)
+library(ggnetwork)
+library(ggpubr)
+
+#network:
+data.sim <- getTableHosts(SimulationSingle, "A")
+graph.simA <- graph.data.frame(data.sim[-1,c("inf.by","hosts.ID")],directed=T,vertices = data.sim)
+graph.simA.network <- ggnetwork(graph.simA, layout = with_kk()) 
+
+ggplot(graph.simA.network, aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_edges(color = "grey70",arrow = arrow(length = unit(0.3, "lines"), type = "open")) +
+  geom_nodes(aes(color=inf.time)) + 
+  scale_color_viridis(name="Time of infection",option = "plasma") + 
+  theme_blank()
+
+#phylogenetic tree:
+library(ggtree)
+test.nosoiA.tree <- getTransmissionTree(SimulationSingle) #Extraction of the full transmission tree from the simulated data
+
+ggtree(test.nosoiA.tree) + geom_nodepoint(aes(color=state)) + geom_tippoint(aes(color=state)) + 
+  theme_tree2() + xlab("Time (t)") + theme(legend.position = c(0,0.8), 
+                                           legend.title = element_blank(),
+                                           legend.key = element_blank()) 
 
 
 

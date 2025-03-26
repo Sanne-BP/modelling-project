@@ -117,8 +117,8 @@ simulate_population <- function(time_steps = 100, initial_population = 1000,
   return(population)
 }
 
-pop_sim <- simulate_population()
-plot(1:length(pop_sim), pop_sim, type="l", col="blue", lwd=2,
+pop_size <- simulate_population()
+plot(1:length(pop_size), pop_size, type="l", col="blue", lwd=2,
      xlab="Time Steps", ylab="Population Size", main="Population Simulation")
 
 
@@ -129,7 +129,7 @@ plot(1:length(pop_sim), pop_sim, type="l", col="blue", lwd=2,
 
 #So, nContacts now becomes dependent on the population size. So, the bigger the population the more contacts and the smaller the fewer contacts, So, it should be some sort of percentage or something. 
 
-#nContact --> depends on pop_sim --> modify n_contact_fct to depend on current population size
+#nContact --> depends on pop_size --> modify n_contact_fct to depend on current population size
 #but should everything now become dependent on the population size or is only nContact sufficient?
 
 simulate_population <- function(time_steps, initial_population, birth_rate, death_rate) {
@@ -239,6 +239,8 @@ SimulationSingle <- nosoiSim(type = "single", popStructure = "none",
                              prefix.host = "H",
                              print.progress = FALSE)
 
+#Well, it does successfully run, but it is of course not clearly visual if it is actually working.
+#Trying to visualize:
 cumulative.table <- getCumulative(SimulationSingle)
 ggplot(data=cumulative.table, aes(x=t, y=Count)) + 
   geom_line() + 
@@ -273,13 +275,12 @@ p4 <- ggplot(combined_data) +
 
 library(patchwork)
 p3 + p4 + plot_layout(ncol=1)
-ggsave("Plots/Fig_exploration_birthdeaths", width = 8, height = 6, dpi = 300)
+ggsave("Plots/Fig_exploration_birthdeaths.pdf", width = 8, height = 6, dpi = 300)
 
 
-#Well, it does successfully run, but it is of course not clearly visual if it is actually working.
+#try some other visualizations
 summary(SimulationSingle)
 
-#try to visualize it, maybe that helps?
 library(ggplot2)
 library(viridis)
 library(igraph)
@@ -305,6 +306,115 @@ ggtree(test.nosoiA.tree) + geom_nodepoint(aes(color=state)) + geom_tippoint(aes(
   theme_tree2() + xlab("Time (t)") + theme(legend.position = c(0,0.8), 
                                            legend.title = element_blank(),
                                            legend.key = element_blank()) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#-----------------------------now lets try to compare multiple runs with varying parameters
+#lets try different birth/death rates or transmission probabilities to compare dynamics
+simulate_population <- function(time_steps, initial_population, birth_rate, death_rate) {
+  population <- numeric(time_steps)
+  population[1] <- initial_population
+  
+  for (t in 2:time_steps) {
+    births <- rpois(1, birth_rate * population[t-1])
+    deaths <- rbinom(1, population[t-1], death_rate)
+    population[t] <- population[t-1] + births - deaths
+  }
+  
+  return(population)}
+
+pop_size <- simulate_population(time_steps, initial_population = 1000, 
+                                birth_rate = 0.5, death_rate = 0.5)
+time_steps <- 1000
+
+p10 <- ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size), 
+       aes(x=Time, y=Population)) +
+  geom_line(color="blue", linewidth=0.5) +
+  theme_minimal() +
+  labs(x="Time Steps", y="Population Size", title="Population Size Dynamics")
+
+n_contact_fct <- function(t) {
+  current_pop <- pop_size[min(t, length(pop_size))]  # Get current population size
+  base_rate <- 0.5  
+  scaled_mean <- base_rate * (current_pop / 1000)  
+  n_contacts_i <- abs(round(rnorm(1, scaled_mean, 1), 0))  
+  return(n_contacts_i)  
+}
+
+# Other functions remain the same
+p_Exit_fct  <- function(t) { return(0.04) }
+
+p_Trans_fct <- function(t, p_max, t_incub) {
+  if (t < t_incub) { p <- 0 }
+  if (t >= t_incub) { p <- p_max }
+  return(p)
+}
+
+t_incub_fct <- function(x) { rnorm(x, mean = 5, sd = 1) }
+p_max_fct <- function(x) { rbeta(x, shape1 = 5, shape2 = 2) }
+
+param_pTrans = list(p_max = p_max_fct, t_incub = t_incub_fct)
+
+# Run the Nosoi simulation
+SimulationSingle <- nosoiSim(type = "single", popStructure = "none",
+                             length.sim = time_steps, max.infected = 1000, init.individuals = 1,
+                             nContact = n_contact_fct,
+                             param.nContact = NA,
+                             timeDep.nContact = FALSE,
+                             pExit = p_Exit_fct,
+                             param.pExit = NA,
+                             timeDep.pExit = FALSE,
+                             pTrans = p_Trans_fct,
+                             param.pTrans = param_pTrans,
+                             timeDep.pTrans = FALSE,
+                             prefix.host = "H",
+                             print.progress = FALSE)
+
+#visualize:
+cumulative.table <- getCumulative(SimulationSingle)
+ggplot(data=cumulative.table, aes(x=t, y=Count)) + 
+  geom_line() + 
+  theme_minimal() + 
+  labs(x="Time (t)",y="Cumulative count of infected hosts")
+
+dynamics.table <- getDynamic(SimulationSingle)
+ggplot(data=dynamics.table, aes(x=t, y=Count)) + 
+  geom_line() + 
+  theme_minimal() + 
+  labs(x="Time (t)",y="Number of active infected hosts")
+
+combined_data <- data.frame(
+  Time = dynamics.table$t,
+  ActiveInfected = dynamics.table$Count,
+  CumulativeInfected = cumulative.table$Count)
+
+p11 <- ggplot(combined_data) +
+  geom_line(aes(x=Time, y=ActiveInfected, color="Active Infected"), linewidth=1) +
+  geom_line(aes(x=Time, y=CumulativeInfected, color="Cumulative Infected"), linewidth=1) +
+  labs(x="Time (t)", y="Number of Infected Hosts", title="Active vs Cumulative Infections") +
+  scale_color_manual(values=c("red", "blue")) +
+  theme_minimal()
+
+p10 + p11 + plot_layout(ncol=1)
+ggsave("Plots/Fig_TEST3_exploration_birthdeaths.pdf", width = 8, height = 6, dpi = 300)
+
+#okay the nosoi simulation is now set that it stops when 1000 hosts are infected. However, not sure whether this now actually matches with the population size dynamics. Of course currently infected does not necessarily mean that the whole population should at that moment be 0, but it should be at least 1000 right?. S0 when at time unit 45 there are already 1020 hosts infected, there should be at least 1000 individuals in the population, but that does not match
+#--> SO right now only contacts are being determined by the population size dynamics that we created, but the entire simulation does not depend on the population size dynamics. 
+
+
+
+
 
 
 
@@ -358,5 +468,3 @@ p2 <- ggplot(data=dynamics.table, aes(x=t, y=Count)) +
 #combine p1, p2 
 library(patchwork)
 p1 + p2 
-
-

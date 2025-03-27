@@ -1,6 +1,6 @@
 #################Pathogen examples: Spread of dengue virus in a discrete space#####################
 rm(list = ls())
-gc()  # Clean up memory in R
+
 
 #-------------Introduction
 #In this example, our objective is to simulate a dengue-like epidemic in South-East Asia. Dengue is a dual-host pathogen (arbovirus) that spreads between mosquitoes and humans, with very different within-host dynamics. We will also take into account the location’s influence on mosquito activity by using the local monthly average temperature: the higher the temperature, the more mosquito activity (i.e. the more mosquitoes will bite a human at each time step). Mosquitoes will not move between countries, but humans will; we will use air transportation data to approximate the transition probability matrix between the different countries.
@@ -56,3 +56,69 @@ for(current.country in SE.Asia){
                                             k2=reslm$coefficients[3]))}
   
 #het werkt allemaal niet, omdat ik die data niet kan laden.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#-----------------New attempt, this time I could load the data, so that's a start! :)
+#Initial data
+#3 letter code of countries of interest:
+SE.Asia <- c("CHN","KHM","LAO","THA","VNM")
+study.area.SE.Asia <- extent(90, 125, 5, 30) #to crop the raster to the study site
+
+#Load spatial polygones:
+library(raster); library(sf); library(terra); library(dplyr); library(readr); library(ggplot2)
+
+
+# Path to where you saved the GADM files
+shapefile_dir <- "/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/Master Project 1/modelling-project/Data/gadm41_/"  
+
+# Read each country's shapefile manually
+CHN <- st_read(paste0(shapefile_dir, "gadm41_CHN_0.shp"))
+KHM <- st_read(paste0(shapefile_dir, "gadm41_KHM_0.shp"))
+LAO <- st_read(paste0(shapefile_dir, "gadm41_LAO_0.shp"))
+THA <- st_read(paste0(shapefile_dir, "gadm41_THA_0.shp"))
+VNM <- st_read(paste0(shapefile_dir, "gadm41_VNM_0.shp"))
+
+# Merge them into one spatial object
+GADM.admin0 <- rbind(CHN, KHM, LAO, THA, VNM)
+print(GADM.admin0)
+
+#loading the data from github 
+avgTemp_data <- read_csv("data/avgTemp_data.csv")
+
+#We can visualize these data on a map, 
+#This is the pattern of average temperature for each country over the year::
+ggplot(avgTemp_data, aes(x = Month, y = Temp, color = country)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Monthly Temperature Trends by Country",
+       x = "Month", y = "Average Temperature (°C)",
+       color="Country") +
+  theme_minimal()
+
+#now visualize it on the map of the country
+
+
+
+
+
+
+

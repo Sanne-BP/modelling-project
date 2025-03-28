@@ -322,6 +322,8 @@ ggtree(test.nosoiA.tree) + geom_nodepoint(aes(color=state)) + geom_tippoint(aes(
 
 #-----------------------------now lets try to compare multiple runs with varying parameters
 #lets try different birth/death rates or transmission probabilities to compare dynamics
+time_steps <- 1000
+
 simulate_population <- function(time_steps, initial_population, birth_rate, death_rate) {
   population <- numeric(time_steps)
   population[1] <- initial_population
@@ -336,7 +338,6 @@ simulate_population <- function(time_steps, initial_population, birth_rate, deat
 
 pop_size <- simulate_population(time_steps, initial_population = 1000, 
                                 birth_rate = 0.5, death_rate = 0.5)
-time_steps <- 1000
 
 p10 <- ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size), 
        aes(x=Time, y=Population)) +
@@ -406,11 +407,40 @@ p11 <- ggplot(combined_data) +
   scale_color_manual(values=c("red", "blue")) +
   theme_minimal()
 
-p10 + p11 + plot_layout(ncol=1)
-ggsave("Plots/Fig_TEST3_exploration_birthdeaths.pdf", width = 8, height = 6, dpi = 300)
+library(patchwork)
+p10 + p11 + p12+ plot_layout(ncol=1)
+ggsave("Plots/Fig_TEST3.1_exploration_birthdeaths.pdf", width = 8, height = 6, dpi = 300)
 
-#okay the nosoi simulation is now set that it stops when 1000 hosts are infected. However, not sure whether this now actually matches with the population size dynamics. Of course currently infected does not necessarily mean that the whole population should at that moment be 0, but it should be at least 1000 right?. S0 when at time unit 45 there are already 1020 hosts infected, there should be at least 1000 individuals in the population, but that does not match
+
+#okay the nosoi simulation is now set that it stops when 1000 hosts are infected. However, not sure whether this now actually matches with the population size dynamics. Of course currently infected does not necessarily mean that the whole population should at that moment be 0, but it should be at least 1000 right?. S0 when at time unit 45 there are already 1020 hosts infected, there should be at least 1000 individuals in the population, but that does not match, NO it does actually match never mind (only in that specific example lol). But I still don't think that the 2 are completely intertwined already, which is of course logical we are only just getting started lolzzz.
 #--> SO right now only contacts are being determined by the population size dynamics that we created, but the entire simulation does not depend on the population size dynamics. 
+
+#is it possible to plot the nContacts? NO idea how to do that, but perhaps we can see a pattern with the population size, as those two things are the only things that are now linked to each other --> no that is not possible 
+
+
+#Let's look at example 3: so, in this test example 3 (see figure 3) the simulation has run for 40 units and 1093 hosts have been infected, lets see how big the population size is at that very time step
+p12 <- ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size), 
+              aes(x=Time, y=Population)) +
+  geom_line(color="blue", linewidth=0.5) + 
+  geom_vline(xintercept=40, linetype="dashed", 
+             color="red", linewidth=0.8) +  
+  geom_point(data=data.frame(Time=40, Population=pop_size[40]), 
+             aes(x=Time, y=Population), 
+             color="red", size=3) +  # Highlight the exact population size at t = 40
+  annotate("text", x=42, y=pop_size[40] + 10, 
+           label=paste("t = 40\nPop =", pop_size[40]), color="red", hjust=0) + # Annotate value
+  theme_minimal() +
+  labs(x="Time Steps", y="Population Size", 
+       title="Population Size Dynamics with t = 40 Highlighted")
+
+#Soooo, at the time point that there are 1093 host infected, the population size is 932. So it does not match. So that would be of course the goal, to actually have it match. Which is the goal of the research project hahaha.
+
+
+
+
+
+
+
 
 
 

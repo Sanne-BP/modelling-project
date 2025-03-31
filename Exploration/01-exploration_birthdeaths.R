@@ -345,6 +345,7 @@ p10 <- ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size),
   geom_line(color="blue", linewidth=0.5) +
   theme_minimal() +
   labs(x="Time Steps", y="Population Size", title="Population Size Dynamics")
+p10
 
 n_contact_fct <- function(t) {
   current_pop <- pop_size[min(t, length(pop_size))]  # Get current population size
@@ -416,8 +417,6 @@ ggsave("Plots/Fig_TEST3.1_exploration_birthdeaths.pdf", width = 8, height = 6, d
 #okay the nosoi simulation is now set that it stops when 1000 hosts are infected. However, not sure whether this now actually matches with the population size dynamics. Of course currently infected does not necessarily mean that the whole population should at that moment be 0, but it should be at least 1000 right?. S0 when at time unit 45 there are already 1020 hosts infected, there should be at least 1000 individuals in the population, but that does not match, NO it does actually match never mind (only in that specific example lol). But I still don't think that the 2 are completely intertwined already, which is of course logical we are only just getting started lolzzz.
 #--> SO right now only contacts are being determined by the population size dynamics that we created, but the entire simulation does not depend on the population size dynamics. 
 
-#is it possible to plot the nContacts? NO idea how to do that, but perhaps we can see a pattern with the population size, as those two things are the only things that are now linked to each other --> no that is not possible 
-
 
 #Let's look at example 3: so, in this test example 3 (see figure 3) the simulation has run for 40 units and 1093 hosts have been infected, lets see how big the population size is at that very time step
 p12 <- ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size), 
@@ -448,8 +447,138 @@ p12 <- ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size),
 
 
 
+#-------------------------------
+#is it possible to plot the nContacts? NO idea how to do that, but perhaps we can see a pattern with the population size, as those two things are the only things that are now linked to each other 
+pop_size <- simulate_population(time_steps, initial_population = 1000, 
+                                birth_rate = 1, death_rate = 1)
+
+ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size), 
+       aes(x=Time, y=Population)) +
+  geom_line(color="blue", linewidth=0.5) +
+  theme_minimal() +
+  labs(x="Time Steps", y="Population Size", title="Population Size Dynamics")
+
+contact_log <- data.frame(Time = numeric(), Population = numeric(), Contacts = numeric())
+
+n_contact_fct <- function(t) {
+  current_pop <- pop_size[min(t, length(pop_size))]  # Get current population size
+  base_rate <- 0.5  
+  scaled_mean <- base_rate * (current_pop / 1000)  
+  n_contacts_i <- abs(round(rnorm(1, scaled_mean, 1), 0)) 
+  contact_log <<- rbind(contact_log, data.frame(Time = t, Population = current_pop, 
+                                                Contacts = n_contacts_i))
+  return(n_contacts_i)  
+}
+
+#(keeping all other parameters the same)
+SimulationSingle <- nosoiSim(type = "single", popStructure = "none",
+                             length.sim = time_steps, max.infected = 1000, init.individuals = 1,
+                             nContact = n_contact_fct,
+                             param.nContact = NA,
+                             timeDep.nContact = FALSE,
+                             pExit = p_Exit_fct,
+                             param.pExit = NA,
+                             timeDep.pExit = FALSE,
+                             pTrans = p_Trans_fct,
+                             param.pTrans = param_pTrans,
+                             timeDep.pTrans = FALSE,
+                             prefix.host = "H",
+                             print.progress = FALSE)
+
+ggplot(contact_log, aes(x = Population, y = Contacts)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  theme_minimal() +
+  labs(x = "Population Size", y = "Number of Contacts", title = "Contacts vs. Population Size")
+
+#of course the population size is not fluctuating THAT much to actually see a clear trend in the number of contacts vs the population size. and using linear model is also not really capturing the trend that well. 
+
+ggplot(contact_log, aes(x = Population, y = Contacts)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "loess", color = "red", se = FALSE) +
+  theme_minimal() +
+  labs(x = "Population Size", y = "Number of Contacts", title = "Contacts vs. Population Size")
+#ggsave("Plots/Fig_TEST2_nContacts.pdf", width = 8, height = 6, dpi = 300)
 
 
+
+
+
+
+
+
+#NOT SURE IF THIS IS CORRECT
+#-------------------try this with multiple simulations
+
+# Number of simulations
+num_sims <- 50
+
+# Store results
+multi_contact_log <- data.frame(Simulation = integer(), Time = integer(), Population = numeric(), Contacts = numeric())
+
+for (sim in 1:num_sims) {
+  # Reset contact log for each simulation
+  contact_log <- data.frame(Time = numeric(), Population = numeric(), Contacts = numeric())
+  
+  # Run population dynamics
+  pop_size <- simulate_population(time_steps, initial_population = 1000, birth_rate = 0.05, death_rate = 0.05)
+  
+  # Define nContact function for this run
+  n_contact_fct <- function(t) {
+    current_pop <- pop_size[min(t, length(pop_size))]  
+    base_rate <- 0.5  
+    scaled_mean <- base_rate * (current_pop / 1000)  
+    n_contacts_i <- abs(round(rnorm(1, scaled_mean, 1), 0)) 
+    contact_log <<- rbind(contact_log, data.frame(Time = t, Population = current_pop, Contacts = n_contacts_i))
+    return(n_contacts_i)  
+  }
+  
+  # Run Nosoi simulation
+  SimulationSingle <- nosoiSim(type = "single", popStructure = "none",
+                               length.sim = time_steps, max.infected = 1000, init.individuals = 1,
+                               nContact = n_contact_fct,
+                               param.nContact = NA,
+                               timeDep.nContact = FALSE,
+                               pExit = p_Exit_fct,
+                               param.pExit = NA,
+                               timeDep.pExit = FALSE,
+                               pTrans = p_Trans_fct,
+                               param.pTrans = param_pTrans,
+                               timeDep.pTrans = FALSE,
+                               prefix.host = "H",
+                               print.progress = FALSE)
+  
+  # Store results
+  contact_log$Simulation <- sim
+  multi_contact_log <- rbind(multi_contact_log, contact_log)
+}
+
+#visualize
+ggplot(multi_contact_log, aes(x = Population, y = Contacts, color = factor(Simulation))) +
+  geom_point(alpha = 0.3) +  
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(x = "Population Size", y = "Number of Contacts",
+       title = "Contacts vs. Population Size Across Simulations") +
+  theme(legend.position = "none")  # Hide legend if too many simulations
+
+ggplot(multi_contact_log, aes(x = Time, y = Population, color = factor(Simulation))) +
+  geom_line(alpha = 0.5) +
+  theme_minimal() +
+  labs(x = "Time Steps", y = "Population Size", title = "Population Size Across Simulations")
+
+
+
+
+
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------------------------------
 ##-----------------------------Example model:
 p_Exit_fct  <- function(t){return(0.08)}
 

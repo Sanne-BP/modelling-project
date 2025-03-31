@@ -2,6 +2,7 @@
 rm(list = ls())
 
 #----------simplified approach to implement basic birth-death dynamics:
+###---------------------DOES NOT WORK
 host_availability <- function(t, current_ids, total_pop_size, birth_rate, death_rate) {
   # Calculate births
   new_births <- rpois(1, birth_rate * total_pop_size)
@@ -408,7 +409,7 @@ p11 <- ggplot(combined_data) +
   theme_minimal()
 
 library(patchwork)
-p10 + p11 + p12+ plot_layout(ncol=1)
+p10 + p11 + plot_layout(ncol=1)
 ggsave("Plots/Fig_TEST3.1_exploration_birthdeaths.pdf", width = 8, height = 6, dpi = 300)
 
 

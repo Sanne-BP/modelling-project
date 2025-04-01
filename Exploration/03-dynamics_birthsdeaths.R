@@ -1,7 +1,7 @@
 #Right now we have: a working simulation in which nContact is determined based on population size dynamics. But population size dynamics are not being influenced by the simulation itself, they are not dependent on each other yet. 
 #     •	So we have a working population dynamics system, in which there is a given population size          which is influenced over time by birth and death rates
-         # --> simplified model: population size is influenced by birth and death rates
-#     •	nContact is based on this population size, each individual in the simulation gets their own         contact number 
+    # --> simplified model: population size is influenced by birth and death rates
+#     •	nContact is based on this population size, each individual in the simulation gets their           own contact number 
 
 rm(list = ls())
 library(devtools)
@@ -74,7 +74,7 @@ SimulationSingle <- nosoiSim(type = "single", popStructure = "none",
 
 
 
-
+#################################################################################################
 #--------------------also want to use the logistic equation to model population dynamics
 #dN/dT = rN(1-N/K), with N = population size, r = intrinsic growth rate, K = carrying capacity
 

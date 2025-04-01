@@ -1,7 +1,9 @@
 #Right now we have: a working simulation in which nContact is determined based on population size dynamics. But population size dynamics are not being influenced by the simulation itself, they are not dependent on each other yet. 
 #     •	So we have a working population dynamics system, in which there is a given population size          which is influenced over time by birth and death rates
+         # --> simplified model: population size is influenced by birth and death rates
 #     •	nContact is based on this population size, each individual in the simulation gets their own         contact number 
 
+rm(list = ls())
 library(devtools)
 library(nosoi)
 library(ggplot2)
@@ -66,6 +68,95 @@ SimulationSingle <- nosoiSim(type = "single", popStructure = "none",
                              timeDep.pTrans = FALSE,
                              prefix.host = "H",
                              print.progress = FALSE)
+
+
+
+
+
+
+
+#--------------------also want to use the logistic equation to model population dynamics
+#dN/dT = rN(1-N/K), with N = population size, r = intrinsic growth rate, K = carrying capacity
+
+simulate_population_logistic <- function(time_steps, initial_population, r, K) {
+  population <- numeric(time_steps)
+  population[1] <- initial_population
+  
+  for (t in 2:time_steps) {
+    growth <- r * population[t-1] * (1 - population[t-1] / K)  # Logistic growth term
+    population[t] <- max(1, round(population[t-1] + growth))  # Ensure positive pop size
+  }
+  
+  return(population)
+}
+
+# Parameters
+time_steps <- 100
+initial_population <- 1000
+r <- 0.1  # Intrinsic growth rate
+K <- 1500  # Carrying capacity
+
+# Simulate population
+pop_sizelog <- simulate_population_logistic(time_steps, initial_population, r, K)
+
+# Plot the results
+ggplot(data = data.frame(Time = 1:time_steps, Population = pop_sizelog), 
+       aes(x = Time, y = Population)) +
+  geom_line(color = "blue", linewidth = 1) +
+  theme_minimal() +
+  labs(x = "Time Steps", y = "Population Size", title = "Logistic Population Growth")
+
+#So, now growth slows down as population nears the carrying capacity. BUT in this case there are no random births/deaths, as it is deterministic, that's not what we want. Also there is a smooth growth curve, instead of random fluctuations. Not so excited about this. 
+
+#--> with the same parameters, you'll always get the same result while running it. Is that something we want? No right?
+
+
+#-----------------------------Adding stochasticity
+simulate_population_logistic_stochastic <- function(time_steps, initial_population, r, K, variability = 0.3) {
+  population <- numeric(time_steps)
+  population[1] <- initial_population
+  
+  for (t in 2:time_steps) {
+    # Logistic growth rate
+    expected_growth <- r * population[t-1] * (1 - population[t-1] / K)
+    
+    # Stochastic component: Poisson-distributed fluctuations in growth
+    growth <- rpois(1, lambda = max(1, expected_growth)) - 
+      rpois(1, lambda = max(1, variability * abs(expected_growth)))
+    
+    # Ensure population remains positive
+    population[t] <- max(1, population[t-1] + growth)
+  }
+  return(population)
+}
+
+
+time_steps <- 100
+initial_population <- 1000
+r <- 3
+K <- 1100
+
+# Run the stochastic model
+pop_size_stochastic <- simulate_population_logistic_stochastic(time_steps, initial_population, r, K, variability = 0.3)
+
+# Plot the stochastic population dynamics
+ggplot(data = data.frame(Time = 1:time_steps, Population = pop_size_stochastic), 
+       aes(x = Time, y = Population)) +
+  geom_line(color = "blue", linewidth = 1) +
+  theme_minimal() +
+  labs(x = "Time Steps", y = "Population Size", title = "Stochastic Logistic Growth")
+
+#not too sure about this to be honest, I liked the simplified model more, as its more intuitive 
+#there could still be a fair chance that I am doing this absolutely wrong tho
+
+
+
+
+
+
+
+
+
 
 
 

@@ -432,6 +432,7 @@ p12 <- ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size),
   theme_minimal() +
   labs(x="Time Steps", y="Population Size", 
        title="Population Size Dynamics with t = 40 Highlighted")
+p12
 
 #Soooo, at the time point that there are 1093 host infected, the population size is 932. So it does not match. So that would be of course the goal, to actually have it match. Which is the goal of the research project hahaha.
 
@@ -448,127 +449,7 @@ p12 <- ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size),
 
 
 #-------------------------------
-#is it possible to plot the nContacts? NO idea how to do that, but perhaps we can see a pattern with the population size, as those two things are the only things that are now linked to each other 
-pop_size <- simulate_population(time_steps, initial_population = 1000, 
-                                birth_rate = 1, death_rate = 1)
-
-ggplot(data=data.frame(Time=1:length(pop_size), Population=pop_size), 
-       aes(x=Time, y=Population)) +
-  geom_line(color="blue", linewidth=0.5) +
-  theme_minimal() +
-  labs(x="Time Steps", y="Population Size", title="Population Size Dynamics")
-
-contact_log <- data.frame(Time = numeric(), Population = numeric(), Contacts = numeric())
-
-n_contact_fct <- function(t) {
-  current_pop <- pop_size[min(t, length(pop_size))]  # Get current population size
-  base_rate <- 0.5  
-  scaled_mean <- base_rate * (current_pop / 1000)  
-  n_contacts_i <- abs(round(rnorm(1, scaled_mean, 1), 0)) 
-  contact_log <<- rbind(contact_log, data.frame(Time = t, Population = current_pop, 
-                                                Contacts = n_contacts_i))
-  return(n_contacts_i)  
-}
-
-#(keeping all other parameters the same)
-SimulationSingle <- nosoiSim(type = "single", popStructure = "none",
-                             length.sim = time_steps, max.infected = 1000, init.individuals = 1,
-                             nContact = n_contact_fct,
-                             param.nContact = NA,
-                             timeDep.nContact = FALSE,
-                             pExit = p_Exit_fct,
-                             param.pExit = NA,
-                             timeDep.pExit = FALSE,
-                             pTrans = p_Trans_fct,
-                             param.pTrans = param_pTrans,
-                             timeDep.pTrans = FALSE,
-                             prefix.host = "H",
-                             print.progress = FALSE)
-
-ggplot(contact_log, aes(x = Population, y = Contacts)) +
-  geom_point(alpha = 0.5, color = "blue") +
-  geom_smooth(method = "lm", color = "red", se = FALSE) +
-  theme_minimal() +
-  labs(x = "Population Size", y = "Number of Contacts", title = "Contacts vs. Population Size")
-
-#of course the population size is not fluctuating THAT much to actually see a clear trend in the number of contacts vs the population size. and using linear model is also not really capturing the trend that well. 
-
-ggplot(contact_log, aes(x = Population, y = Contacts)) +
-  geom_point(alpha = 0.5, color = "blue") +
-  geom_smooth(method = "loess", color = "red", se = FALSE) +
-  theme_minimal() +
-  labs(x = "Population Size", y = "Number of Contacts", title = "Contacts vs. Population Size")
-#ggsave("Plots/Fig_TEST2_nContacts.pdf", width = 8, height = 6, dpi = 300)
-
-
-
-
-
-
-
-
-#NOT SURE IF THIS IS CORRECT
-#-------------------try this with multiple simulations
-
-# Number of simulations
-num_sims <- 50
-
-# Store results
-multi_contact_log <- data.frame(Simulation = integer(), Time = integer(), Population = numeric(), Contacts = numeric())
-
-for (sim in 1:num_sims) {
-  # Reset contact log for each simulation
-  contact_log <- data.frame(Time = numeric(), Population = numeric(), Contacts = numeric())
-  
-  # Run population dynamics
-  pop_size <- simulate_population(time_steps, initial_population = 1000, birth_rate = 0.05, death_rate = 0.05)
-  
-  # Define nContact function for this run
-  n_contact_fct <- function(t) {
-    current_pop <- pop_size[min(t, length(pop_size))]  
-    base_rate <- 0.5  
-    scaled_mean <- base_rate * (current_pop / 1000)  
-    n_contacts_i <- abs(round(rnorm(1, scaled_mean, 1), 0)) 
-    contact_log <<- rbind(contact_log, data.frame(Time = t, Population = current_pop, Contacts = n_contacts_i))
-    return(n_contacts_i)  
-  }
-  
-  # Run Nosoi simulation
-  SimulationSingle <- nosoiSim(type = "single", popStructure = "none",
-                               length.sim = time_steps, max.infected = 1000, init.individuals = 1,
-                               nContact = n_contact_fct,
-                               param.nContact = NA,
-                               timeDep.nContact = FALSE,
-                               pExit = p_Exit_fct,
-                               param.pExit = NA,
-                               timeDep.pExit = FALSE,
-                               pTrans = p_Trans_fct,
-                               param.pTrans = param_pTrans,
-                               timeDep.pTrans = FALSE,
-                               prefix.host = "H",
-                               print.progress = FALSE)
-  
-  # Store results
-  contact_log$Simulation <- sim
-  multi_contact_log <- rbind(multi_contact_log, contact_log)
-}
-
-#visualize
-ggplot(multi_contact_log, aes(x = Population, y = Contacts, color = factor(Simulation))) +
-  geom_point(alpha = 0.3) +  
-  geom_smooth(method = "lm", se = FALSE) +
-  theme_minimal() +
-  labs(x = "Population Size", y = "Number of Contacts",
-       title = "Contacts vs. Population Size Across Simulations") +
-  theme(legend.position = "none")  # Hide legend if too many simulations
-
-ggplot(multi_contact_log, aes(x = Time, y = Population, color = factor(Simulation))) +
-  geom_line(alpha = 0.5) +
-  theme_minimal() +
-  labs(x = "Time Steps", y = "Population Size", title = "Population Size Across Simulations")
-
-
-
+#is it possible to plot the nContacts? NO idea how to do that, but perhaps we can see a pattern with the population size, as those two things are the only things that are now linked to each other. This continues in script 02-exploration_ncontact
 
 
 

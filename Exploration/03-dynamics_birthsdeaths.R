@@ -150,13 +150,3 @@ ggplot(data = data.frame(Time = 1:time_steps, Population = pop_size_stochastic),
 #there could still be a fair chance that I am doing this absolutely wrong tho
 
 
-
-
-
-
-
-
-
-
-
-

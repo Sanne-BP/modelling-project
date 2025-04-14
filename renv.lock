@@ -5795,11 +5795,11 @@
     },
     "raster": {
       "Package": "raster",
-      "Version": "3.6-31",
+      "Version": "3.6-32",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Geographic Data Analysis and Modeling",
-      "Date": "2025-01-16",
+      "Date": "2025-03-27",
       "Imports": [
         "Rcpp",
         "methods",

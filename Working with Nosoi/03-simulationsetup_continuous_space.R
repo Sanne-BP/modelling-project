@@ -1,6 +1,7 @@
 #############Simulation set up
 rm(list = ls())
 
+library(nosoi)
 ############Spread of a pathogen in a continuous space
 #Aside from the simple simulation set up, explored in another tutorial, where hosts are “not structured”, nosoi can take into account a population structured either in discrete states or in a continuous space. We focus here on a continuous space structure (for the discrete structure, see this tutorial).
 #The continuous space is intended to allow the simulation to take place in a geographical context where hosts can move on a map, and may be influenced by heterogeneously distributed variables (environmental for example) on said map.
@@ -8,10 +9,10 @@ rm(list = ls())
 
 #--------Structure of the population
 #continuous space
-install.packages("raster")
+#install.packages("raster")
 library(raster)
 set.seed(860)
-test.raster <- raster(nrows=100, ncols=100, xmn=-50, xmx=50, ymn=-50,ymx=50)
+test.raster <- raster::raster(nrows=100, ncols=100, xmn=-50, xmx=50, ymn=-50,ymx=50)
 test.raster[] <- runif(10000, -80, 150)
 test.raster <- focal(focal(test.raster, w=matrix(1, 5, 5), mean), w=matrix(1, 5, 5), mean)
 plot(test.raster)
@@ -152,8 +153,8 @@ SimulationSingle <- nosoiSim(type="single", popStructure="continuous",
                              print.step=10)
 
 #Once the simulation has finished, it reports the number of time units for which the simulation has run (40), and the maximum number of infected hosts (350). Note that the simulation has stopped here before reaching length.sim as it has crossed the max.infected threshold set at 300.
-
-
+getHostData(SimulationSingle, "table.hosts")
+table.hosts3 <- as.data.frame(getTableHosts(SimulationSingle, "A"))
 
 
 

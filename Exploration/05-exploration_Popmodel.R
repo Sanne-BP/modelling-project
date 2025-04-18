@@ -141,7 +141,9 @@ table.PopModel <- data.frame(
 #5    4      99900      998
 #6    5     100150     1002
 
-#But now, 
+#But now, we need to make sure that the table is created based on the simulation. 
+#So, the total individuals should be limited to my simulated population size
+#Lets try adjusting this in the actual R internal nosoi code
 
 
 
@@ -160,7 +162,7 @@ table.PopModel <- data.frame(
 
 
 
-
+#----------------------------------trying out-----did not use this
 #wrapper function that tracks and stores pop size and nContacts for each step during the simulation: CHATGPT gave this, but did not try it out yet
 run_sim_with_pop_tracking <- function(time_steps, 
                                       initial_population = 100000,
@@ -224,18 +226,3 @@ run_sim_with_pop_tracking <- function(time_steps,
 
 
 #so how to make the population size dependent on nosoi?
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

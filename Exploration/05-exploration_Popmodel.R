@@ -149,6 +149,45 @@ table.PopModel <- data.frame(
 
 
 
+#so how to make the population size dependent on nosoi?
+#We have embedded the population dynamics directly into the nosoi engine in script: single-none.R, so now we can use this modified function I guess?
+simtest <- singleNone(length.sim = 1000,
+                  max.infected = 1000,
+                  init.individuals = 1,
+                  pExit = p_Exit_fct,
+                  param.pExit = NA,
+                  nContact = n_contact_fct,
+                  param.nContact = NA,
+                  pTrans = p_Trans_fct,
+                  param.pTrans = param_pTrans,
+                  initial.population = 100000,
+                  birth.rate = 0.5,
+                  death.rate = 0.5)
+
+sim$popSize
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -210,19 +249,3 @@ run_sim_with_pop_tracking <- function(time_steps,
   return(SimulationSingle)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#so how to make the population size dependent on nosoi?

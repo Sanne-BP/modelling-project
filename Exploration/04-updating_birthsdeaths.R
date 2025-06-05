@@ -214,8 +214,8 @@ pop_sim <- pop_size[sim_times + 1]  # because pop_size[1] = time 0
 
 ggplot(data = data.frame(Time = sim_times, Population = pop_sim, 
                          Contacts = contacts_sim), aes(x = Time)) +
-  geom_line(aes(y = Population, color = "Population Size"), size = 1) +
-  geom_line(aes(y = Contacts, color = "Number of Contacts"), size = 1) +
+  geom_line(aes(y = Population, color = "Population Size"), linewidth = 1) +
+  geom_line(aes(y = Contacts, color = "Number of Contacts"), linewidth = 1) +
   theme_minimal() +
   labs(title = "Population Dynamics and Number of Contacts",
        x = "Time", y = "Value") +

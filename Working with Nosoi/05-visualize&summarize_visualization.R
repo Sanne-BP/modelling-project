@@ -38,9 +38,8 @@ time_contact <- function(t, current.in, host.count){
 
 transition.matrix = matrix(c(0,0.2,0.4,0.5,0,0.6,0.5,0.8,0),nrow = 3, ncol = 3,dimnames=list(c("A","B","C"),c("A","B","C")))
 
-set.seed(1050)
 test.nosoiA <- nosoiSim(type="single", popStructure="discrete",
-                        length=100,
+                        length=10,
                         max.infected=200,
                         init.individuals=1,
                         init.structure="A",
@@ -79,7 +78,10 @@ graph.simA.network <- ggnetwork(graph.simA, layout = with_kk())
 plot1 <- ggplot(graph.simA.network, aes(x = x, y = y, xend = xend, yend = yend)) +
   geom_edges(color = "grey70",arrow = arrow(length = unit(0.3, "lines"), type = "open")) +
   geom_nodes(aes(color=inf.time)) + scale_color_viridis(name="Time of infection",option = "plasma") + 
-  theme_blank()
+  theme_blank()+
+  theme(element_text(size=18))
+plot1
+ggsave("Plots/Presentation/transmission-chain.png", plot1, width = 5, height = 3, dpi = 300)
 
 #plotting the network (color is state the host was infected in)
 plot2 <- ggplot(graph.simA.network, aes(x = x, y = y, xend = xend, yend = yend)) +
@@ -139,7 +141,7 @@ library(tsna)
 saveVideo(render.animation(test.network,vertex.col = "color",
                            render.par=list(show.time=TRUE),
                            edge.col = "gray60",
-                           displaylabels=FALSE, render.cache='none',mode="kamadakawai"),video.name="transmission-nosoi.mp4")
+                           displaylabels=FALSE, render.cache='none',mode="kamadakawai"),video.name="transmission-nosoi2.mp4")
 
 #In this video, nodes (i.e. hosts) come from the center of the network: this does not mean anything in particular and is due to layout constrains. Nodes in red are active (i.e. infectious) hosts whereas nodes in gray are exited hosts. The time steps considered are displayed at the bottom of the frame.
 

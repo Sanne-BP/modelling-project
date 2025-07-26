@@ -246,8 +246,8 @@ p1 <- ggplot(df, aes(x = Time)) +
   theme_minimal()
 p1
 
-#Well, this looks great!!! So this means its actually working. Big slay
-#It kinda does look to good to be true lol, but lets test this
+#Well, this looks great!!! So this means its actually working. 
+#It kinda does look to good to be true, but lets test this
 #Saving this image and lets try it for multiple runs!!
 ggsave("Plots/Fig_Test_Popsize&Contacts.pdf", width = 8, height = 6)
 

@@ -6,7 +6,7 @@
 #       o	A host population that collapses due to infection would lead to pathogen extinction 
 
 #Perhaps its possible to integrate some parameters for nContact
-#no idea how, but lets seeeee
+#no idea how, but lets see!
 
 ##-----------------------------Example Nosoi model:
 p_Exit_fct  <- function(t){return(0.08)}

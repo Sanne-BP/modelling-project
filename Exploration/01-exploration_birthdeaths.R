@@ -1,4 +1,4 @@
-####################Trying out some approaches to integrate population dynamics###################
+####################Trying out some approaches to integrate population dynamics##################
 rm(list = ls())
 
 #----------simplified approach to implement basic birth-death dynamics:
@@ -459,7 +459,7 @@ p12
 
 
 
-#-------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
 ##-----------------------------Example model:
 p_Exit_fct  <- function(t){return(0.08)}
 

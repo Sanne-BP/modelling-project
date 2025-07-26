@@ -1,4 +1,4 @@
-#exploring some things together with ChatGPT
+#doing some exploratory work together with ChatGPT
 #clear environment
 rm(list=ls())
 
